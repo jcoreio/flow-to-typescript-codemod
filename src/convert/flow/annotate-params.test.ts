@@ -19,7 +19,7 @@ describe("implied params", () => {
     const expected = dedent`
     const add = function (num1: number, num2: number) {
       return num1 + num2;
-    }
+    };
     `;
     mockedExecuteFlowTypeAtPos.mockResolvedValue('{"type": "number"}');
     expect(await transform(src)).toBe(expected);
@@ -37,7 +37,7 @@ describe("implied params", () => {
     type Type = (num1: number, num2: number) => number;
     const add: Type = function (num1, num2) {
       return num1 + num2;
-    }
+    };
     `;
     mockedExecuteFlowTypeAtPos.mockResolvedValue('{"type": "number"}');
     expect(await transform(src)).toBe(expected);
@@ -105,7 +105,7 @@ describe("implied params", () => {
 
   it("does not annotate function expressions inside a React component", async () => {
     const src = dedent`
-    <Element arg={(num1, num2) => num1 + num2} />
+    <Element arg={(num1, num2) => num1 + num2} />;
     `;
 
     mockedExecuteFlowTypeAtPos.mockResolvedValue('{"type": "number"}');
@@ -140,7 +140,7 @@ describe("implied params", () => {
       add: Type = function(num1: number, num2: number) {
         return num1 + num2;
       };
-    };
+    }
     `;
 
     mockedExecuteFlowTypeAtPos.mockResolvedValue('{"type": "number"}');
@@ -242,7 +242,7 @@ describe("implied params", () => {
     const expected = dedent`
     const add = function (num1: unknown, num2: unknown) {
       return num1 + num2;
-    }
+    };
     `;
 
     expect(

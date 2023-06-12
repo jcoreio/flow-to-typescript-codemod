@@ -21,14 +21,14 @@ describe("parameter inference", () => {
   describe("required inference", () => {
     it("provides inference for ArrowFunctionExpressions", async () => {
       const src = `(a, b) => {a + b};`;
-      const expected = `(a: string, b: string) => {a + b};`;
+      const expected = `(a: string, b: string) => {a + b;};`;
       mockedFlowTypeAtPos.mockResolvedValue(stringTypeAnnotation());
       expect(await transform(src)).toBe(expected);
     });
 
     it("skips inference if disableFlow is set", async () => {
       const src = `(a, b) => {a + b};`;
-      const expected = `(a: unknown, b: unknown) => {a + b};`;
+      const expected = `(a: unknown, b: unknown) => {a + b;};`;
       // mockedFlowTypeAtPos.mockResolvedValue(stringTypeAnnotation());
       expect(
         await transform(src, stateBuilder({ config: { disableFlow: true } }))
@@ -37,14 +37,14 @@ describe("parameter inference", () => {
 
     it("provides inference for FunctionDeclarations", async () => {
       const src = `function fn(a, b) {return a + b};`;
-      const expected = `function fn(a: string, b: string) {return a + b};`;
+      const expected = `function fn(a: string, b: string) {return a + b;}`;
       mockedFlowTypeAtPos.mockResolvedValue(stringTypeAnnotation());
       expect(await transform(src)).toBe(expected);
     });
 
     it("provides inference for FunctionExpressions", async () => {
       const src = `const fn = function(a, b) {return a + b};`;
-      const expected = `const fn = function(a: string, b: string) {return a + b};`;
+      const expected = `const fn = function(a: string, b: string) {return a + b;};`;
       mockedFlowTypeAtPos.mockResolvedValue(stringTypeAnnotation());
       expect(await transform(src)).toBe(expected);
     });
@@ -63,7 +63,7 @@ describe("parameter inference", () => {
     describe("test files", () => {
       it("uses `any` type instead of parameter inference for test files", async () => {
         const src = `(a, b) => {a + b};`;
-        const expected = `(a: any, b: any) => {a + b};`;
+        const expected = `(a: any, b: any) => {a + b;};`;
 
         expect(
           await transform(
@@ -92,7 +92,7 @@ describe("parameter inference", () => {
     });
     it("does not provide inference on FunctionDeclarations within CallExpressions", async () => {
       const src = `const r = [1, 2, 3].map(function fn(a) {return a + 1});`;
-      const expected = `const r = [1, 2, 3].map(function fn(a) {return a + 1});`;
+      const expected = `const r = [1, 2, 3].map(function fn(a) {return a + 1;});`;
       expect(await transform(src)).toBe(expected);
       expect(mockedFlowTypeAtPos).not.toBeCalled();
     });
@@ -199,7 +199,7 @@ describe("assigning required fields an optional value", () => {
     const f8 = (arg1: string): () => string => (): string => ({});
     const f9 = (arg1: string): any => ({foo: 'bar'});
     const f10 = (arg1: string): any => ({foo() {}});
-    var f11 = {foo: (arg1: string): object => ({})}
+    var f11 = {foo: (arg1: string): object => ({})};
     `;
 
       expect(await transform(src)).toBe(src);

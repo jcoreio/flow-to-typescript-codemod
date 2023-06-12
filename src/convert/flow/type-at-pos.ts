@@ -1,10 +1,9 @@
 import * as t from "@babel/types";
-import * as recast from "recast";
-import * as recastFlowParser from "recast/parsers/flow";
 import { executeFlowTypeAtPos } from "./execute-type-at-pos";
 import { State } from "../../runner/state";
 import MigrationReporter from "../../runner/migration-reporter";
 import { transformPrivateTypes } from "../private-types";
+import { getParserAsync } from "babel-parse-wild-code";
 /**
  * Runs Flow to get the inferred type at a given position. Uses the Flow server so once the Flow
  * server is running this should be pretty fast. We use this to add explicit annotations where Flow
@@ -12,7 +11,7 @@ import { transformPrivateTypes } from "../private-types";
  *
  * Queued so that we don’t overload the Flow server.
  */
-export function flowTypeAtPos(
+export async function flowTypeAtPos(
   state: State,
   location: t.SourceLocation,
   migrationReporter: MigrationReporter
@@ -37,13 +36,21 @@ export function flowTypeAtPos(
     processFlowTypeAtPosQueue();
   }
 
-  return promise
-    .then((stdOut) =>
-      processFlowTypeAtPosStdout(stdOut, migrationReporter, state, location)
-    )
-    .catch(() => {
-      return null;
-    });
+  try {
+    const [stdOut, parser] = await Promise.all([
+      promise,
+      getParserAsync(state.config.filePath),
+    ]);
+    return processFlowTypeAtPosStdout(
+      parser,
+      stdOut,
+      migrationReporter,
+      state,
+      location
+    );
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -100,6 +107,9 @@ function processFlowTypeAtPosQueue() {
  * Processes the standard output of `flow type-at-pos`.
  */
 function processFlowTypeAtPosStdout(
+  parser: {
+    parse: (code: string) => t.File;
+  },
   stdout: string,
   migrationReporter: MigrationReporter,
   state: State,
@@ -132,9 +142,7 @@ function processFlowTypeAtPosStdout(
 
   try {
     // Parse the Flow type and return it!
-    const flowType: t.File = recast.parse(`type T = ${type};`, {
-      parser: recastFlowParser,
-    });
+    const flowType: t.File = parser.parse(`type T = ${type};`);
 
     // Run our pre-processing step on the types
     transformPrivateTypes({

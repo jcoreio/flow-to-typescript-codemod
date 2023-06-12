@@ -1,5 +1,4 @@
 import traverse from "@babel/traverse";
-import { types } from "recast";
 import * as t from "@babel/types";
 import { TransformerInput } from "./transformer";
 import { addCommentsAtHeadOfNode } from "./utils/common";
@@ -15,12 +14,11 @@ export function annotateNoFlow({ file }: TransformerInput) {
         path.node.body.push(t.emptyStatement());
       }
 
-      const rootNode: types.namedTypes.Node = path.node.body[0];
+      const rootNode: t.Node = path.node.body[0];
 
       addCommentsAtHeadOfNode(rootNode, [
+        // @ts-expect-error missing start, end, loc
         {
-          leading: true,
-          trailing: false,
           value: `@ts-nocheck`,
           type: "CommentLine",
         },

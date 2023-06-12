@@ -12,14 +12,14 @@ describe("type at position", () => {
 
   it("annotates primitive types", async () => {
     const src = `function fn(a, b) {return a + b};`;
-    const expected = `function fn(a: string, b: string) {return a + b};`;
+    const expected = `function fn(a: string, b: string) {return a + b;};`;
     mockedExecuteFlowTypeAtPos.mockResolvedValue('{"type": "string"}');
     expect(await transform(src)).toBe(expected);
   });
 
   it("annotates union types", async () => {
     const src = `function fn(a) {return a};`;
-    const expected = `function fn(a: string | number) {return a};`;
+    const expected = `function fn(a: string | number) {return a;};`;
     mockedExecuteFlowTypeAtPos.mockResolvedValue('{"type": "string | number"}');
     expect(await transform(src)).toBe(expected);
   });
@@ -67,7 +67,7 @@ describe("type at position", () => {
   it("annotates explicit any", async () => {
     const src = `function fn(a) {return a};`;
     mockedExecuteFlowTypeAtPos.mockResolvedValue('{"type": "any(explicit)"}');
-    const expected = `function fn(a: any) {return a};`;
+    const expected = `function fn(a: any) {return a;};`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -79,14 +79,14 @@ describe("type at position", () => {
 
   it("converts utility types", async () => {
     const src = `function fn(a) {return a};`;
-    const expected = `function fn(a: Partial<Foo>) {return a};`;
+    const expected = `function fn(a: Partial<Foo>) {return a;};`;
     mockedExecuteFlowTypeAtPos.mockResolvedValue('{"type": "$Shape<Foo>"}');
     expect(await transform(src)).toBe(expected);
   });
 
   it("pre-processes private types", async () => {
     const src = `function fn(a) {return a};`;
-    const expected = `function fn(a: React.ReactNode) {return a};`;
+    const expected = `function fn(a: React.ReactNode) {return a;};`;
     mockedExecuteFlowTypeAtPos.mockResolvedValue('{"type": "React$Node"}');
     expect(await transform(src)).toBe(expected);
   });
@@ -110,7 +110,7 @@ describe("type at position", () => {
     const expected = dedent`function fn(a) {
       type Foo = Partial<Test>;
       return a;
-    };`;
+    }`;
     mockedExecuteFlowTypeAtPos.mockRejectedValue("Command failed");
     expect(await transform(src)).toBe(expected);
   });

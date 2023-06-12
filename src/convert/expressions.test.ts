@@ -11,20 +11,20 @@ jest.mock("../runner/migration-reporter/migration-reporter.ts");
 describe("transform expressions", () => {
   it("converts basic typecast", async () => {
     const src = `(x: boolean);`;
-    const expected = `(x as boolean);`;
+    const expected = `x as boolean;`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("typecasts nested cast any", async () => {
     const src = `((x: any): T);`;
-    const expected = `(x as T);`;
+    const expected = `x as T;`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("typecasts nested cast object", async () => {
     const src = `((x: Object): T);`;
     const expected = dedent`
-    (x as any as T);`;
+    x as any as T;`;
     expect(await transform(src)).toBe(expected);
     expectMigrationReporterMethodCalled("usedFlowAnyObject");
   });
@@ -32,26 +32,26 @@ describe("transform expressions", () => {
   it("typecasts nested cast function", async () => {
     const src = `((x: Function): T);`;
     const expected = dedent`
-    (x as any as T);`;
+    x as any as T;`;
     expect(await transform(src)).toBe(expected);
     expectMigrationReporterMethodCalled("usedFlowAnyFunction");
   });
 
   it("typecasts string constant", async () => {
     const src = `('foo': 'foo');`;
-    const expected = `('foo' as const);`;
+    const expected = `'foo' as const;`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("typecasts number constant", async () => {
     const src = `(42: 42);`;
-    const expected = `(42 as const);`;
+    const expected = `42 as const;`;
     expect(await transform(src)).toBe(expected);
   });
 
   // Arrow Function Type Parameters
   it("does not modify non-tsx arrow function parameters", async () => {
-    const src = `const f = <T>(arg: T) => {arg};`;
+    const src = `const f = <T>(arg: T) => {arg;};`;
     expect(await transform(src)).toBe(src);
   });
 
@@ -61,7 +61,7 @@ describe("transform expressions", () => {
     const Component = <div />;
     `;
     const expected = dedent`
-    const f = <T extends unknown>(arg: T) => {arg};
+    const f = <T extends unknown>(arg: T) => {arg;};
     const Component = <div />;
     `;
     expect(await transform(src)).toBe(expected);
@@ -99,7 +99,7 @@ describe("transform expressions", () => {
     const Component = <div />;
     `;
     const expected = dedent`
-    const f = <T extends unknown, T2 extends unknown>(arg: T, arg2: T2) => {arg, arg2};
+    const f = <T extends unknown, T2 extends unknown>(arg: T, arg2: T2) => {arg, arg2;};
     const Component = <div />;
     `;
     expect(await transform(src)).toBe(expected);
@@ -111,7 +111,7 @@ describe("transform expressions", () => {
     const Component = <div />;
     `;
     const expected = dedent`
-    const f = <T extends string, T2 extends unknown>(arg: T, arg2: T2) => {arg, arg2};
+    const f = <T extends string, T2 extends unknown>(arg: T, arg2: T2) => {arg, arg2;};
     const Component = <div />;
     `;
     expect(await transform(src)).toBe(expected);

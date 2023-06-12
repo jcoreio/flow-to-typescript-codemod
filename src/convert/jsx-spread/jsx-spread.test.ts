@@ -28,7 +28,7 @@ describe("transform spread JSX attributes", () => {
 
     function Foobar(x: Props & Omit<Omit<Flow.ComponentProps<typeof Mine>, 'it'>, keyof Props>) { 
       const { it, ...rest } = x;
-      return <Mine it={it} {...rest} />
+      return <Mine it={it} {...rest} />;
     }`;
 
     expect(
@@ -57,8 +57,8 @@ describe("transform spread JSX attributes", () => {
 
     const Foobar = (x: Props & Omit<Omit<Flow.ComponentProps<typeof Mine>, 'it'>, keyof Props>) => { 
       const { it, ...rest } = x;
-      return <Mine it={it} {...rest} />
-    }`;
+      return <Mine it={it} {...rest} />;
+    };`;
 
     expect(
       await transform(
@@ -91,10 +91,10 @@ describe("transform spread JSX attributes", () => {
     function Foobar(x: Props & Omit<Omit<Flow.ComponentProps<typeof Mine>, 'it'>, keyof Props>) { 
       const { it, ...rest } = x;
       if (true) {
-        return <Mine it={it} {...rest} />
+        return <Mine it={it} {...rest} />;
       }
 
-      return <Mine {...rest} />
+      return <Mine {...rest} />;
     }`;
 
     expect(
@@ -269,7 +269,7 @@ describe("transform spread JSX attributes", () => {
 
     function Foobar(x: Props & Omit<Flow.ComponentProps<typeof Mine>, keyof Props>) { 
       const { it, ...rest } = x;
-      return <Mine {...rest} />
+      return <Mine {...rest} />;
     }`;
 
     expect(
@@ -299,7 +299,7 @@ describe("transform spread JSX attributes", () => {
     function Foobar(x: Props) { 
       const { it, ...rest } = x;
       const El = Mine;
-      return <El it={it} {...rest} />
+      return <El it={it} {...rest} />;
     }`;
 
     expect(

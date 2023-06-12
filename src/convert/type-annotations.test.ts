@@ -16,49 +16,49 @@ describe("transform type annotations", () => {
 
   it("Marks void or null parameters optional", async () => {
     const src = `function f(x: ?T){};`;
-    const expected = `function f(x?: T | null){};`;
+    const expected = `function f(x?: T | null) {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Marks void parameters optional", async () => {
     const src = `function f(x: T | void){};`;
-    const expected = `function f(x?: T){};`;
+    const expected = `function f(x?: T) {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Avoids marking void parameters if followed by non-optional", async () => {
     const src = `function f(x: void, y: string){};`;
-    const expected = `function f(x: undefined, y: string){};`;
+    const expected = `function f(x: undefined, y: string) {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Marks void as optional if no other parameters", async () => {
     const src = `function f(x: string | void, y?: string){};`;
-    const expected = `function f(x?: string, y?: string){};`;
+    const expected = `function f(x?: string, y?: string) {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Marks multiple void parameters optional with unions", async () => {
     const src = `function f(x: T | void, y: ?string){};`;
-    const expected = `function f(x?: T, y?: string | null){};`;
+    const expected = `function f(x?: T, y?: string | null) {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Avoids optionals preceding nullables", async () => {
     const src = `function f(x: ?T, y: string){};`;
-    const expected = `function f(x: T | null | undefined, y: string){};`;
+    const expected = `function f(x: T | null | undefined, y: string) {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Avoids optionals preceding non-optional unions", async () => {
     const src = `function f(x: T | void, y: string){};`;
-    const expected = `function f(x: T | undefined, y: string){};`;
+    const expected = `function f(x: T | undefined, y: string) {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Convertsions optional unions preceding optionals", async () => {
     const src = `function f(x: T | void, y?: string){};`;
-    const expected = `function f(x?: T, y?: string){};`;
+    const expected = `function f(x?: T, y?: string) {}`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -74,12 +74,12 @@ describe("transform type annotations", () => {
 
   it("Keeps void promises as void", async () => {
     const src = `function f(): Promise<void> {};`;
-    const expected = `function f(): Promise<void> {};`;
+    const expected = `function f(): Promise<void> {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("does not convert void return types for functions to undefined", async () => {
-    const src = `function fn(): void {};`;
+    const src = `function fn(): void {}`;
     expect(await transform(src)).toBe(src);
   });
 
@@ -220,44 +220,44 @@ describe("transform type annotations", () => {
   describe("synthetic events", () => {
     it("Converts SyntheticMouseEvent", async () => {
       const src = `const handler = (e: SyntheticMouseEvent) => {console.log(e)};`;
-      const expected = `const handler = (e: React.MouseEvent) => {console.log(e)};`;
+      const expected = `const handler = (e: React.MouseEvent) => {console.log(e);};`;
       expect(await transform(src)).toBe(expected);
     });
 
     it("Converts SyntheticMouseEvent with params", async () => {
       const src = `const handler = (e: SyntheticMouseEvent<HTMLButtonElement>) => {console.log(e)};`;
-      const expected = `const handler = (e: React.MouseEvent<HTMLButtonElement>) => {console.log(e)};`;
+      const expected = `const handler = (e: React.MouseEvent<HTMLButtonElement>) => {console.log(e);};`;
       expect(await transform(src)).toBe(expected);
     });
 
     it("Converts SyntheticInputEvent and adds input type", async () => {
       const src = `const handler = (e: SyntheticInputEvent) => {console.log(e)};`;
-      const expected = `const handler = (e: React.ChangeEvent<HTMLInputElement>) => {console.log(e)};`;
+      const expected = `const handler = (e: React.ChangeEvent<HTMLInputElement>) => {console.log(e);};`;
       expect(await transform(src)).toBe(expected);
     });
 
     it("Converts SyntheticInputEvent with open params", async () => {
       const src = `const handler = (e: SyntheticInputEvent<>) => {console.log(e)};`;
-      const expected = `const handler = (e: React.ChangeEvent<HTMLInputElement>) => {console.log(e)};`;
+      const expected = `const handler = (e: React.ChangeEvent<HTMLInputElement>) => {console.log(e);};`;
       expect(await transform(src)).toBe(expected);
     });
 
     it("Converts SyntheticInputEvent and keeps params", async () => {
       const src = `const handler = (e: SyntheticInputEvent<HTMLButtonElement>) => {console.log(e)};`;
-      const expected = `const handler = (e: React.ChangeEvent<HTMLButtonElement>) => {console.log(e)};`;
+      const expected = `const handler = (e: React.ChangeEvent<HTMLButtonElement>) => {console.log(e);};`;
       expect(await transform(src)).toBe(expected);
     });
 
     it("Converts SyntheticEvent to Event", async () => {
       const src = `const handler = (e: SyntheticEvent<>) => {console.log(e)};`;
-      const expected = `const handler = (e: React.SyntheticEvent) => {console.log(e)};`;
+      const expected = `const handler = (e: React.SyntheticEvent) => {console.log(e);};`;
       expect(await transform(src)).toBe(expected);
     });
   });
 
   it("Converts SyntheticEvent to Event with params", async () => {
     const src = `const handler = (e: SyntheticEvent<HTMLElement>) => {console.log(e)};`;
-    const expected = `const handler = (e: React.SyntheticEvent<HTMLElement>) => {console.log(e)};`;
+    const expected = `const handler = (e: React.SyntheticEvent<HTMLElement>) => {console.log(e);};`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -268,7 +268,7 @@ describe("transform type annotations", () => {
     `;
     const expected = dedent`
     const test: string = "";
-    (test as jest.MockedFunction<typeof test>);
+    test as jest.MockedFunction<typeof test>;
     `;
     expect(await transform(src)).toBe(expected);
   });
@@ -290,7 +290,7 @@ describe("transform type annotations", () => {
     (test.a: JestMockFn<any, any>);
     `;
     const expected = dedent`
-    (test.a as jest.MockedFunction<typeof test.a>);
+    test.a as jest.MockedFunction<typeof test.a>;
     `;
     expect(await transform(src)).toBe(expected);
   });
@@ -310,7 +310,7 @@ describe("transform type annotations", () => {
     (test.a.b: JestMockFn<any, any>);
     `;
     const expected = dedent`
-    (test.a.b as jest.MockedFunction<typeof test.a.b>);
+    test.a.b as jest.MockedFunction<typeof test.a.b>;
     `;
     expect(await transform(src)).toBe(expected);
   });
@@ -369,43 +369,43 @@ describe("transform type annotations", () => {
 
   it("Converts React.Node to React.ReactElement in function return", async () => {
     const src = `const Component = (props: Props): React.Node => {return <div />};`;
-    const expected = `const Component = (props: Props): React.ReactElement => {return <div />};`;
+    const expected = `const Component = (props: Props): React.ReactElement => {return <div />;};`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.Element", async () => {
     const src = `function f(): React.Element<T> {};`;
-    const expected = `function f(): React.ReactElement<React.ComponentProps<T>> {};`;
+    const expected = `function f(): React.ReactElement<React.ComponentProps<T>> {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.Text", async () => {
     const src = `function f(): React.Text {};`;
-    const expected = `function f(): React.ReactText {};`;
+    const expected = `function f(): React.ReactText {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.Child", async () => {
     const src = `function f(): React.Child {};`;
-    const expected = `function f(): React.ReactChild {};`;
+    const expected = `function f(): React.ReactChild {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.Children", async () => {
     const src = `function f(): React.Children {};`;
-    const expected = `function f(): React.ReactChildren {};`;
+    const expected = `function f(): React.ReactChildren {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.Fragment", async () => {
     const src = `function f(): React.Fragment {};`;
-    const expected = `function f(): React.ReactFragment {};`;
+    const expected = `function f(): React.ReactFragment {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.Portal", async () => {
     const src = `function f(): React.Portal {};`;
-    const expected = `function f(): React.ReactPortal {};`;
+    const expected = `function f(): React.ReactPortal {}`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -425,37 +425,37 @@ describe("transform type annotations", () => {
 
   it("Converts React.ElementProps", async () => {
     const src = `function f(): React.ElementProps {};`;
-    const expected = `function f(): React.ComponentProps {};`;
+    const expected = `function f(): React.ComponentProps {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.StatelessFunctionalComponent", async () => {
     const src = `function f(): React.StatelessFunctionalComponent<Props> {};`;
-    const expected = `function f(): React.FC<Props> {};`;
+    const expected = `function f(): React.FC<Props> {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.NodeArray", async () => {
     const src = `function f(): React.NodeArray {};`;
-    const expected = `function f(): React.ReactNodeArray {};`;
+    const expected = `function f(): React.ReactNodeArray {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.MixedElement", async () => {
     const src = `function f(): React.MixedElement {};`;
-    const expected = `function f(): React.ReactElement {};`;
+    const expected = `function f(): React.ReactElement {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.Portal with type parameters", async () => {
     const src = `function f(): React.Portal<Props> {};`;
-    const expected = `function f(): React.ReactPortal<Props> {};`;
+    const expected = `function f(): React.ReactPortal<Props> {}`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts React.Node to React.ReactElement in arrow function", async () => {
     const src = `const Component = (props: Props): React.Node => {return <div />};`;
-    const expected = `const Component = (props: Props): React.ReactElement => {return <div />};`;
+    const expected = `const Component = (props: Props): React.ReactElement => {return <div />;};`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -465,7 +465,8 @@ describe("transform type annotations", () => {
       return null;
     };`;
     const expected = dedent`const Component = (props: Props): React.ReactElement | null => {
-      if (foo) return (<div />);
+      if (foo)
+        return (<div />);
       return null;
     };`;
     expect(await transform(src)).toBe(expected);
@@ -473,7 +474,7 @@ describe("transform type annotations", () => {
 
   it("Converts React.Node to React.ReactElement in normal function", async () => {
     const src = `function Component(props: Props): React.Node {return <div />};`;
-    const expected = `function Component(props: Props): React.ReactElement {return <div />};`;
+    const expected = `function Component(props: Props): React.ReactElement {return <div />;}`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -483,9 +484,10 @@ describe("transform type annotations", () => {
       return null;
     };`;
     const expected = dedent`function Component(props: Props): React.ReactElement | null {
-      if (foo) return (<div />);
+      if (foo)
+        return (<div />);
       return null;
-    };`;
+    }`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -497,7 +499,7 @@ describe("transform type annotations", () => {
 
   it("Converts React$Element", async () => {
     const src = `function f(): React$Element<T> {};`;
-    const expected = `function f(): React.ReactElement<React.ComponentProps<T>> {};`;
+    const expected = `function f(): React.ReactElement<React.ComponentProps<T>> {}`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -577,15 +579,15 @@ describe("transform type annotations", () => {
 
   describe("Empty object type", () => {
     it("Converts {} to Record<any, any> in a functions return", async () => {
-      const src = dedent`function f(): {} {return {}}
+      const src = dedent`function f(): {} {return {};}
     let af: () => {}
     class C {
-      m(): {} {return {}}
+      m(): {} {return {};}
     }`;
-      const expected = dedent`function f(): Record<any, any> {return {}}
-    let af: () => Record<any, any>
+      const expected = dedent`function f(): Record<any, any> {return {};}
+    let af: () => Record<any, any>;
     class C {
-      m(): Record<any, any> {return {}}
+      m(): Record<any, any> {return {};}
     }`;
 
       const state = stateBuilder({});
@@ -596,14 +598,14 @@ describe("transform type annotations", () => {
       // dedent messes up the indentation of the string
       const src = `function f(): {
   prop: boolean
-} {return {}}
+} {return {};}
 let af: () => {
   prop: boolean
-}
+};
 class C {
   m(): {
     prop: boolean
-  } {return {}}
+  } {return {};}
 }`;
 
       const state = stateBuilder({});
@@ -624,7 +626,7 @@ class C {
 
     it("converts assigned object types as Record", async () => {
       const src = `const a: {} = {}`;
-      const expected = `const a: Record<any, any> = {}`;
+      const expected = `const a: Record<any, any> = {};`;
       expect(await transform(src)).toBe(expected);
     });
 
@@ -859,7 +861,7 @@ class C {
   it("Handles unexpected type nodes", async () => {
     const src = dedent`
     function f(a: function){};`;
-    const expected = `function f(a: unknown){};`;
+    const expected = `function f(a: unknown) {}`;
     expect(await transform(src)).toBe(expected);
     expectMigrationReporterMethodCalled("unhandledFlowInputNode");
   });

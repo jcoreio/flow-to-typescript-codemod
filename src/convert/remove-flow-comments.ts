@@ -1,6 +1,5 @@
 import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import { types } from "recast";
 import { TransformerInput } from "./transformer";
 
 const flowComments = [
@@ -21,26 +20,32 @@ const removeComments = (
     return;
   }
 
-  const nodes: Array<types.namedTypes.Node> = path.node.body;
+  const nodes: Array<t.Node> = path.node.body;
+
+  function processComments(
+    comments: readonly t.Comment[] | null | undefined
+  ): readonly t.Comment[] | null {
+    return comments
+      ? comments
+          .filter(
+            (comment) => !flowComments.some((c) => comment.value.includes(c))
+          )
+          .map((comment) => {
+            if (comment.value.includes("@noflow")) {
+              return {
+                ...comment,
+                value: comment.value.replace(/@noflow/, "@ts-nocheck"),
+              };
+            }
+
+            return comment;
+          })
+      : null;
+  }
 
   for (const rootNode of nodes) {
-    const { comments } = rootNode;
-
-    rootNode.comments =
-      comments
-        ?.filter(
-          (comment) => !flowComments.some((c) => comment.value.includes(c))
-        )
-        .map((comment) => {
-          if (comment.value.includes("@noflow")) {
-            return {
-              ...comment,
-              value: comment.value.replace(/@noflow/, "@ts-nocheck"),
-            };
-          }
-
-          return comment;
-        }) || rootNode.comments;
+    rootNode.leadingComments = processComments(rootNode.leadingComments);
+    rootNode.trailingComments = processComments(rootNode.trailingComments);
   }
 };
 

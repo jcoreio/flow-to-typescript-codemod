@@ -1,9 +1,8 @@
 import fs from "fs-extra";
 import path from "path";
 import * as t from "@babel/types";
-import * as recast from "recast";
 import { Options } from "recast";
-import * as recastFlowParser from "recast/parsers/flow";
+import { print } from "../convert/utils/print";
 import { runTransforms } from "./run-transforms";
 import MigrationReporter from "./migration-reporter";
 import { ConvertCommandCliArgs } from "../cli/arguments";
@@ -17,6 +16,7 @@ import { ConfigurableTypeProvider } from "../convert/utils/configurable-type-pro
 import { hasDeclaration } from "../convert/utils/common";
 import { FlowFileList, FlowFileType } from "./find-flow-files";
 import { logger } from "./logger";
+import { parse } from "../convert/utils/parse";
 
 export const FlowCommentRegex = /((\/){2,} ?)*@flow.*\n+/;
 
@@ -56,9 +56,7 @@ export async function processBatchAsync(
           // Line counting is not important. Ignore error.
         }
 
-        const file: t.File = recast.parse(fileText, {
-          parser: recastFlowParser,
-        });
+        const file: t.File = await parse(filePath);
         const isTestFile = filePath.endsWith(".test.js");
         if (hasDeclaration(file)) {
           reporter.foundDeclarationFile(filePath);
@@ -102,7 +100,7 @@ export async function processBatchAsync(
         }
 
         // Write the migrated file to a temporary file since we’re just testing at the moment.
-        const newFileText = recast.print(file, recastOptions).code;
+        const newFileText = print(file).code;
 
         const targetFilePath =
           options.target === ""

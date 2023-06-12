@@ -181,7 +181,7 @@ describe("transform declarations", () => {
 
   it("readonly class decls", async () => {
     const src = `class Foo { +prop: boolean; };`;
-    const expected = `class Foo { readonly prop: boolean; };`;
+    const expected = `class Foo { readonly prop: boolean; }`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -225,8 +225,8 @@ describe("transform declarations", () => {
     class Impl extends Base<Function, {}> {};
     `;
     const expected = dedent`
-    class Base<P = any, S = any> {};
-    class Impl extends Base<any, Record<any, any>> {};
+    class Base<P = any, S = any> {}
+    class Impl extends Base<any, Record<any, any>> {}
     `;
     expect(await transform(src)).toBe(expected);
   });
@@ -237,8 +237,8 @@ describe("transform declarations", () => {
     class Impl extends Base<{},> {};
     `;
     const expected = dedent`
-    class Base<P = any, S = any> {};
-    class Impl extends Base<Record<any, any>> {};
+    class Base<P = any, S = any> {}
+    class Impl extends Base<Record<any, any>> {}
     `;
     expect(await transform(src)).toBe(expected);
   });
@@ -297,22 +297,22 @@ describe("transform declarations", () => {
 
   it("Converts exported objects to as const", async () => {
     const src = `export const Obj = {'foo': 'bar'};`;
-    const expected = `export const Obj = {'foo': 'bar'} as const;`;
+    const expected = `export const Obj = {\n  'foo': 'bar',\n} as const;`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("Converts exported arrays to as const", async () => {
     const src = `export const Arr = [1,2];`;
-    const expected = `export const Arr = [1,2] as const;`;
+    const expected = `export const Arr = [1, 2] as const;`;
     expect(await transform(src)).toBe(expected);
   });
 
   it("does convert non exported objects to as const", async () => {
     const src = `const Obj = {'foo': 'bar'};`;
-    const expected = `const Obj = {'foo': 'bar'} as const;`;
+    const expected = `const Obj = {\n  'foo': 'bar',\n} as const;`;
     expect(await transform(src)).toBe(expected);
     const arraySrc = `const Arr = [1,2];`;
-    const arrayExpected = `const Arr = [1,2];`;
+    const arrayExpected = `const Arr = [1, 2];`;
 
     expect(await transform(arraySrc)).toBe(arrayExpected);
   });
@@ -442,7 +442,7 @@ describe("transform declarations", () => {
 
     it("handles optional parameters", async () => {
       const src = dedent`export default function (a?: string, b: number) {}`;
-      const expected = dedent`export default function (a: string | null | undefined, b: number) {}`;
+      const expected = dedent`export default function(a: string | null | undefined, b: number) {}`;
       expect(await transform(src)).toBe(expected);
     });
   });
@@ -514,8 +514,8 @@ describe("transform declarations", () => {
       test(): string {return 'string'};
     };`;
     const expected = dedent`class Foo extends React.Component<Props> {
-      test(): string {return 'string'};
-    };`;
+      test(): string {return 'string';};
+    }`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -524,8 +524,8 @@ describe("transform declarations", () => {
       render(): React.Node {return <div />};
     };`;
     const expected = dedent`class Foo extends React.Component {
-      render(): React.ReactElement {return <div />};
-    };`;
+      render(): React.ReactElement {return <div />;};
+    }`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -538,10 +538,11 @@ describe("transform declarations", () => {
     };`;
     const expected = dedent`class Foo extends React.Component {
       render(): React.ReactElement | null {
-        if (foo) return (<div />);
+        if (foo)
+          return (<div />);
         return null;
       };
-    };`;
+    }`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -550,8 +551,8 @@ describe("transform declarations", () => {
       render = (): React.Node => {return <div />};
     };`;
     const expected = dedent`class Foo extends React.Component {
-      render = (): React.ReactElement => {return <div />};
-    };`;
+      render = (): React.ReactElement => {return <div />;};
+    }`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -560,8 +561,8 @@ describe("transform declarations", () => {
       rendering(): React.Node {return <div />};
     };`;
     const expected = dedent`class Foo extends React.Component {
-      rendering(): React.ReactNode {return <div />};
-    };`;
+      rendering(): React.ReactNode {return <div />;};
+    }`;
     expect(await transform(src)).toBe(expected);
   });
 
@@ -640,7 +641,7 @@ describe("transform declarations", () => {
 
   describe("declaration files", () => {
     it("ignores declaration files", async () => {
-      const src = `declare module '@fake/package' {};`;
+      const src = `declare module '@fake/package' {}`;
       expect(await transform(src)).toBe(src);
       expectMigrationReporterMethodNotCalled("foundDeclarationFile");
     });
@@ -650,7 +651,7 @@ describe("transform declarations", () => {
       expectMigrationReporterMethodNotCalled("foundDeclarationFile");
     });
     it("ignores declaration files with classes", async () => {
-      const src = `declare class Hub {};`;
+      const src = `declare class Hub {}`;
       expect(await transform(src)).toBe(src);
       expectMigrationReporterMethodNotCalled("foundDeclarationFile");
     });
@@ -662,7 +663,7 @@ describe("transform declarations", () => {
       const a = {}
     `;
       const expected = dedent`
-      const a: Record<string, any> = {}
+      const a: Record<string, any> = {};
     `;
       expect(await transform(src)).toBe(expected);
     });
@@ -672,7 +673,7 @@ describe("transform declarations", () => {
       const a: MyType = {}
     `;
       const expected = dedent`
-      const a: MyType = {}
+      const a: MyType = {};
     `;
       expect(await transform(src)).toBe(expected);
     });
@@ -682,7 +683,9 @@ describe("transform declarations", () => {
       const a = { test: 'test' }
     `;
       const expected = dedent`
-      const a = { test: 'test' } as const
+      const a = {
+        test: 'test'
+      } as const;
     `;
       expect(await transform(src)).toBe(expected);
     });
@@ -712,10 +715,10 @@ describe("transform declarations", () => {
       const expected = dedent`
       function fn1([filter, sort]: [Filter, Sort]) {}
       class Cls {fn2([filter, sort]: [Filter, Sort]) {}}
-      const fn3 = ([filter, sort]: [Filter, Sort]) => {}
+      const fn3 = ([filter, sort]: [Filter, Sort]) => {};
       class PrivateCls {#fn4([filter, sort]: [Filter, Sort]) {}}
-      var obj1 = {fn5([filter, sort]: [Filter, Sort]) {}}
-      var obj2 = {fn6: ([filter, sort]: [Filter, Sort]) => {}}
+      var obj1 = {fn5([filter, sort]: [Filter, Sort]) {}};
+      var obj2 = {fn6: ([filter, sort]: [Filter, Sort]) => {}};
       `;
       expect(await transform(src)).toBe(expected);
     });
@@ -732,10 +735,10 @@ describe("transform declarations", () => {
       const expected = dedent`
       function fn1([filter, sort]: [any, Sort]) {}
       class Cls {fn2([filter, sort]: [any, Sort]) {}}
-      const fn3 = ([filter, sort]: [any, Sort]) => {}
+      const fn3 = ([filter, sort]: [any, Sort]) => {};
       class PrivateCls {#fn4([filter, sort]: [any, Sort]) {}}
-      var obj1 = {fn5([filter, sort]: [any, Sort]) {}}
-      var obj2 = {fn6: ([filter, sort]: [any, Sort]) => {}}
+      var obj1 = {fn5([filter, sort]: [any, Sort]) {}};
+      var obj2 = {fn6: ([filter, sort]: [any, Sort]) => {}};
       `;
       expect(await transform(src)).toBe(expected);
     });

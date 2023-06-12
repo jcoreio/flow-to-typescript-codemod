@@ -1,6 +1,5 @@
 import * as t from "@babel/types";
 import traverse, { NodePath, Scope } from "@babel/traverse";
-import { types } from "recast";
 import { TransformerInput } from "../transformer";
 import MigrationReporter from "../../runner/migration-reporter";
 import { logger } from "../../runner/logger";
@@ -167,21 +166,16 @@ export function isInsideCreateReactClass(path: NodePath<t.Node>): boolean {
 export function inheritLocAndComments(oldNode: t.Node, newNode: t.Node) {
   newNode.loc = oldNode.loc;
 
-  // Recast uses a different format for comments then Babel.
-  if ("comments" in oldNode) {
-    // @ts-expect-error comments doesn't exist on babel type
-    newNode.comments = oldNode.comments;
-    delete oldNode.comments;
-  }
+  t.inheritsComments(newNode, oldNode);
+  t.removeComments(oldNode);
 }
 
 export function addCommentsAtHeadOfNode(
-  rootNode: types.namedTypes.Node | undefined,
-  comments: (types.namedTypes.CommentBlock | types.namedTypes.CommentLine)[]
+  rootNode: t.Node | undefined,
+  comments: (t.CommentBlock | t.CommentLine)[]
 ) {
   if (rootNode !== undefined) {
-    rootNode.comments = rootNode.comments || [];
-    rootNode.comments.unshift(...comments);
+    t.addComments(rootNode, "leading", comments);
   } else {
     logger.warn(`Cannot add comments ${comments} to empty node!`);
   }
