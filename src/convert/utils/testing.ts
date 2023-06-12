@@ -1,9 +1,7 @@
-import * as recast from "recast";
 import * as t from "@babel/types";
-import * as recastFlowParser from "recast/parsers/flow";
 import { Project, SourceFile } from "ts-morph";
-import { recastOptions } from "../../runner/process-batch";
 import { runTransforms } from "../../runner/run-transforms";
+import { jsParser } from "babel-parse-wild-code";
 import MigrationReporter from "../../runner/migration-reporter";
 import { defaultTransformerChain } from "../default-transformer-chain";
 import { watermarkTransformRunner } from "../transform-runners";
@@ -12,6 +10,8 @@ import { State } from "../../runner/state";
 import { ConfigurableTypeProvider } from "./configurable-type-provider";
 import { FixCommandCliArgs } from "../../cli/arguments";
 import { FixCommandState } from "../../fix/state";
+import { cloneAstWithOriginals } from "./cloneAstWithOriginals";
+import { print } from "./print";
 
 const MockedMigrationReporter =
   MigrationReporter as unknown as jest.Mock<MigrationReporter>;
@@ -66,13 +66,12 @@ const transformRunner = async (
   transforms: readonly Transformer[]
 ) => {
   const reporter = new MigrationReporter();
-  const file: t.File = recast.parse(code, {
-    parser: recastFlowParser,
-  });
+  const ast: t.File = jsParser.parse(code);
+  const file: t.File = cloneAstWithOriginals(ast, code);
 
   await runTransforms(reporter, state, file, transforms);
 
-  return recast.print(file, recastOptions).code;
+  return print(file).code;
 };
 
 const expectMigrationReporterMethodCalled = (

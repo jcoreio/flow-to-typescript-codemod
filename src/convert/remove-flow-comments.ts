@@ -44,7 +44,10 @@ const removeComments = (
   }
 
   for (const rootNode of nodes) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (rootNode as any).comments = processComments((rootNode as any).comments);
     rootNode.leadingComments = processComments(rootNode.leadingComments);
+    rootNode.innerComments = processComments(rootNode.innerComments);
     rootNode.trailingComments = processComments(rootNode.trailingComments);
   }
 };

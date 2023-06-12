@@ -9,13 +9,18 @@ export async function executeFlowTypeAtPos(
   filePath: string,
   location: t.SourceLocation
 ): Promise<string> {
-  const { default: flowBin } = await import(
-    require.resolve("flow-bin", {
-      paths: [path.dirname(filePath)],
-    })
-  );
-  const rootDir = flowBin.replace(/\/node_modules.*/, "");
-  const relFilePath = path.relative(rootDir, filePath);
+  let flowBin = "$(yarn bin)/flow",
+    rootDir = process.cwd(),
+    relFilePath = filePath;
+  if (!process.env.JEST_WORKER_ID) {
+    ({ default: flowBin } = await import(
+      require.resolve("flow-bin", {
+        paths: [path.dirname(filePath)],
+      })
+    ));
+    rootDir = flowBin.replace(/\/node_modules.*/, "");
+    relFilePath = path.relative(rootDir, filePath);
+  }
   const { line, column } = location.start;
   const command = `${flowBin} type-at-pos "${relFilePath}" ${line} ${
     column + 1

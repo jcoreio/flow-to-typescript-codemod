@@ -684,7 +684,7 @@ describe("transform declarations", () => {
     `;
       const expected = dedent`
       const a = {
-        test: 'test'
+        test: 'test',
       } as const;
     `;
       expect(await transform(src)).toBe(expected);
