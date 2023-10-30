@@ -9,8 +9,6 @@ import {
 import MigrationReporter from "../runner/migration-reporter";
 import { State } from "../runner/state";
 import { annotateParamsWithFlowTypeAtPos } from "./flow/annotate-params";
-import { handleAsyncReturnType } from "./utils/handle-async-function-return-type";
-import { getLoc } from "./utils/common";
 
 type FunctionVisitorProps = {
   awaitPromises: Array<Promise<unknown>>;
@@ -86,15 +84,6 @@ export const functionVisitor = <
     if (path.parentPath.node.type !== "CallExpression") {
       awaitPromises.push(
         annotateParamsWithFlowTypeAtPos(reporter, state, path.node.params, path)
-      );
-    }
-
-    if (path.node.async) {
-      handleAsyncReturnType(
-        path.node,
-        reporter,
-        state.config.filePath,
-        getLoc(path.node)
       );
     }
   },

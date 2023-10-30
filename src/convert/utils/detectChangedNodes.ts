@@ -1,7 +1,6 @@
 import * as t from "@babel/types";
 import { NodePath } from "@babel/traverse";
 import { original } from "./symbols";
-import { isEqual } from "lodash";
 
 export default function detectChangedNodes(path: NodePath): void {
   for (const field of Object.keys(t.NODE_FIELDS[path.node.type])) {

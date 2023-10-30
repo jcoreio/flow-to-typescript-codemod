@@ -397,20 +397,6 @@ class MigrationReporter {
     );
   }
 
-  asyncFunctionReturnType(
-    filePath: string,
-    location: t.SourceLocation,
-    idName: string
-  ) {
-    this.log(
-      MigrationReportItemType.asyncFunctionReturnType,
-      MigrationReportItemSeverity.info,
-      filePath,
-      location,
-      `Return types of async functions must include Promise in TypeScript. Promise<${idName}> will be inserted during conversion.`
-    );
-  }
-
   requiredPropInOptionalAssignment(
     filePath: string,
     location: t.SourceLocation

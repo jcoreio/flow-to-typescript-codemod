@@ -14,6 +14,22 @@ describe("transform type annotations", () => {
     jest.clearAllMocks();
   });
 
+  it("template literals regression", async () => {
+    const src = `\`\${CIPDataType[(cipDataType: any)]} -> \${metadataType} \${
+      multiplier != null || offset != null
+        ? \`(\${multiplier != null ? \`multiplier \${multiplier}\` : ''}\${
+            offset != null ? \`, offset \${offset}\` : ''
+          })\`
+        : ''
+    }\``;
+    const expected = `\`\${CIPDataType[(cipDataType as any)]} -> \${metadataType} \${multiplier != null || offset != null
+        ? \`(\${multiplier != null ? \`multiplier \${multiplier}\` : ''}\${
+            offset != null ? \`, offset \${offset}\` : ''
+          })\`
+        : ''}\`;`;
+    expect(await transform(src)).toBe(expected);
+  });
+
   it("Marks void or null parameters optional", async () => {
     const src = `function f(x: ?T){};`;
     const expected = `function f(x?: T | null) {}`;

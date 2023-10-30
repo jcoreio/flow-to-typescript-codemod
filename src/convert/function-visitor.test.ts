@@ -112,40 +112,6 @@ describe("async functions", () => {
     const simpleFunction2 = async (): Promise<void> => {};
     `;
     expect(await transform(src)).toBe(expected);
-    expectMigrationReporterMethodNotCalled("asyncFunctionReturnType");
-  });
-
-  it("does transform arrow functions", async () => {
-    const src = dedent`
-    const simpleFunction = async (): Type => {};
-    `;
-    const expected = dedent`
-    const simpleFunction = async (): Promise<Type> => {};
-    `;
-    expect(await transform(src)).toBe(expected);
-    expectMigrationReporterMethodCalled("asyncFunctionReturnType");
-  });
-
-  it("does transform function declarations", async () => {
-    const src = dedent`
-    async function simpleFunction(): Type {}
-    `;
-    const expected = dedent`
-    async function simpleFunction(): Promise<Type> {}
-    `;
-    expect(await transform(src)).toBe(expected);
-    expectMigrationReporterMethodCalled("asyncFunctionReturnType");
-  });
-
-  it("keeps namespaces around", async () => {
-    const src = dedent`
-    async function simpleFunction(): Type<InnerType> {}
-    `;
-    const expected = dedent`
-    async function simpleFunction(): Promise<Type<InnerType>> {}
-    `;
-    expect(await transform(src)).toBe(expected);
-    expectMigrationReporterMethodCalled("asyncFunctionReturnType");
   });
 });
 
