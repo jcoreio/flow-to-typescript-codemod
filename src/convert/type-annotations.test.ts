@@ -861,7 +861,27 @@ class C {
   });
 
   describe("$ObjMap", () => {
-    it("Converts $ObjMap to Flow.ObjMap", async () => {
+    it("Converts $ObjMap with static return type to mapped type", async () => {
+      const src = `type Test = $ObjMap<{foo: string, bar: number}, () => number>;`;
+      const expected = dedent`
+      type Test = { [K in keyof {
+        foo: string;
+        bar: number;
+      }]: number };`;
+      expect(await transform(src)).toBe(expected);
+    });
+    it.only("Converts $ObjMap with params to TS conditional type", async () => {
+      const src = `type Test = $ObjMap<O, <A: number, B>(input: {a: A, b: B, c: C}) => [A, B, C]>;`;
+      const expected = dedent`
+      type Test = { [K in keyof O]: O[K] extends {
+        a: infer A extends number;
+        b: infer B;
+        c: C;
+      } ? [A, B, C] : never };`;
+      expect(await transform(src)).toBe(expected);
+    });
+
+    it("Converts other $ObjMap cases to Flow.ObjMap", async () => {
       const src = `type Test = $ObjMap<A, B>;`;
       const expected = dedent`
       import {Flow} from 'flow-to-typescript-codemod';
@@ -869,7 +889,7 @@ class C {
       expect(await transform(src)).toBe(expected);
     });
 
-    it("Does not convert $Diff without parameters", async () => {
+    it("Does not convert $ObjMap without parameters", async () => {
       const src = `type Test = $ObjMap;`;
       expect(await transform(src)).toBe(src);
     });

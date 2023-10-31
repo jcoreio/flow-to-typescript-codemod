@@ -237,6 +237,93 @@ function actuallyMigrateType(
         params &&
         params.params.length === 2
       ) {
+        const input = params.params[0];
+        const mapper = params.params[1];
+        if (mapper.type === "TSFunctionType" && !mapper.parameters.length) {
+          const returnType = mapper.typeAnnotation?.typeAnnotation;
+          if (returnType) {
+            return t.tsMappedType(
+              t.tsTypeParameter(
+                Object.assign(t.tsTypeOperator(input), { operator: "keyof" }),
+                undefined,
+                input.type === "TSTypeReference" &&
+                  input.typeName.type === "Identifier" &&
+                  input.typeName.name === "K"
+                  ? "J"
+                  : "K"
+              ),
+              returnType
+            );
+          }
+        }
+        if (
+          input.type === "TSTypeReference" &&
+          mapper.type === "TSFunctionType"
+        ) {
+          const returnType = mapper.typeAnnotation?.typeAnnotation;
+          const K =
+            input.typeName.type === "Identifier" && input.typeName.name === "K"
+              ? "J"
+              : "K";
+          function mapperToExtendsType(
+            mapper: t.TSFunctionType
+          ): t.TSType | void {
+            const typeParamsByName: Record<string, t.TSTypeParameter> =
+              Object.fromEntries(
+                (mapper.typeParameters?.params || []).map((p) => [p.name, p])
+              );
+
+            function deepMap(node: t.TSType): t.TSType {
+              if (
+                node.type === "TSTypeReference" &&
+                node.typeName.type === "Identifier" &&
+                typeParamsByName[node.typeName.name]
+              ) {
+                return t.tsInferType(typeParamsByName[node.typeName.name]);
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const clone: any = { ...node };
+              for (const key in clone) {
+                const value = clone[key];
+                if (
+                  Array.isArray(value) &&
+                  typeof value[0]?.type === "string"
+                ) {
+                  clone[key] = value.map(deepMap);
+                } else if (typeof value?.type === "string") {
+                  clone[key] = deepMap(value);
+                }
+              }
+              return clone;
+            }
+            const paramTypeAnnotation =
+              mapper.parameters[0]?.type === "Identifier"
+                ? mapper.parameters[0].typeAnnotation
+                : undefined;
+            if (paramTypeAnnotation?.type === "TSTypeAnnotation") {
+              return deepMap(paramTypeAnnotation.typeAnnotation);
+            }
+          }
+          const extendsType = mapperToExtendsType(mapper);
+          if (returnType && extendsType) {
+            return t.tsMappedType(
+              t.tsTypeParameter(
+                Object.assign(t.tsTypeOperator(input), { operator: "keyof" }),
+                undefined,
+                K
+              ),
+              t.tsConditionalType(
+                t.tsIndexedAccessType(
+                  input,
+                  t.tsTypeReference(t.identifier(K))
+                ),
+                extendsType,
+                returnType,
+                t.tsNeverKeyword()
+              )
+            );
+          }
+        }
         reporter.usedObjMap(
           state.config.filePath,
           flowType.loc as t.SourceLocation
