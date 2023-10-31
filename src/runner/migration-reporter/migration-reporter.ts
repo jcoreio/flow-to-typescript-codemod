@@ -327,13 +327,20 @@ class MigrationReporter {
     );
   }
 
-  flowFailToParse(filePath: string, location: t.SourceLocation, err: Error) {
+  flowFailToParse(
+    filePath: string,
+    location: t.SourceLocation,
+    err: Error,
+    type?: string
+  ) {
     this.log(
       MigrationReportItemType.flowFailToParse,
       MigrationReportItemSeverity.error,
       filePath,
       location,
-      `Failed to load an inferred type from Flow. Is Flow installed and working? Failed with error: ${err.message}\n${err.stack}`
+      `Failed to load an inferred type from Flow. Is Flow installed and working? ${
+        type ? `Type: ${JSON.stringify(type)}` : ""
+      } Failed with error: ${err.message}\n${err.stack}`
     );
   }
 

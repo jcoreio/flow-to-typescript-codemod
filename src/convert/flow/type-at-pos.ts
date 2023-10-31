@@ -3,7 +3,7 @@ import { executeFlowTypeAtPos } from "./execute-type-at-pos";
 import { State } from "../../runner/state";
 import MigrationReporter from "../../runner/migration-reporter";
 import { transformPrivateTypes } from "../private-types";
-import { getParserAsync } from "babel-parse-wild-code";
+import { jsParser } from "babel-parse-wild-code";
 /**
  * Runs Flow to get the inferred type at a given position. Uses the Flow server so once the Flow
  * server is running this should be pretty fast. We use this to add explicit annotations where Flow
@@ -37,12 +37,8 @@ export async function flowTypeAtPos(
   }
 
   try {
-    const [stdOut, parser] = await Promise.all([
-      promise,
-      getParserAsync(state.config.filePath),
-    ]);
+    const [stdOut] = await Promise.all([promise]);
     return processFlowTypeAtPosStdout(
-      parser,
       stdOut,
       migrationReporter,
       state,
@@ -107,9 +103,6 @@ function processFlowTypeAtPosQueue() {
  * Processes the standard output of `flow type-at-pos`.
  */
 function processFlowTypeAtPosStdout(
-  parser: {
-    parse: (code: string) => t.File;
-  },
   stdout: string,
   migrationReporter: MigrationReporter,
   state: State,
@@ -142,7 +135,7 @@ function processFlowTypeAtPosStdout(
 
   try {
     // Parse the Flow type and return it!
-    const flowType: t.File = parser.parse(`type T = ${type};`);
+    const flowType: t.File = jsParser.parse(`type T = ${type};`);
 
     // Run our pre-processing step on the types
     transformPrivateTypes({
@@ -167,7 +160,8 @@ function processFlowTypeAtPosStdout(
     migrationReporter.flowFailToParse(
       state.config.filePath,
       location,
-      e as Error
+      e as Error,
+      type
     );
     return null;
   }
