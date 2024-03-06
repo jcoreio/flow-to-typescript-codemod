@@ -101,6 +101,15 @@ function actuallyMigrateType(
             )
           : null;
 
+      // `RegExp$matchArray` → RegExpMatchArray
+      if (
+        id.type === "Identifier" &&
+        id.name === "RegExp$matchArray" &&
+        !params
+      ) {
+        return t.tsTypeReference(t.identifier("RegExpMatchArray"));
+      }
+
       // `Object` → flowAnyObjectType
       // Object in Flow translates to any. The codemod is configurable to allow
       // either a loose translation to any, or a stricter semantic interpretation
